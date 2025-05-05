@@ -40,31 +40,106 @@
 
 ```sql
 -- SQL-скрипт для создания базы данных
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    hashed_password TEXT NOT NULL,
-    role TEXT NOT NULL
-);
+namespace pricing_analyzer_back.Infrasctructure.Models.Dto
+{
+    public class CalculationDto
+    {
+        public int ProductId { get; set; }
+        public int UserId { get; set; }
+        public decimal CustomMarkup { get; set; }
+    }
+}
 
-CREATE TABLE requests (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    content TEXT NOT NULL,
-    status TEXT DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(user_id) REFERENCES users(id)
-);
+namespace pricing_analyzer_back.Infrasctructure.Models.Dto
+{
+    public class CreateProductDto
+    {
+        public string Name { get; set; } = default!;
+        public string Description { get; set; } = default!;
+        public decimal BaseCost { get; set; } // Себестоимость
+        public decimal MarkupPercent { get; set; } // Наценка в %
+    }
+}
 
-CREATE TABLE staff_actions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    request_id INTEGER NOT NULL,
-    staff_id INTEGER NOT NULL,
-    action TEXT NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(request_id) REFERENCES requests(id),
-    FOREIGN KEY(staff_id) REFERENCES users(id)
-);
+namespace pricing_analyzer_back.Infrasctructure.Models.Dto
+{
+    public class LoginDto
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
+}
+
+namespace pricing_analyzer_back.Infrasctructure.Models.Dto
+{
+    public class RegisterDto
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
+}
+
+using System.ComponentModel.DataAnnotations;
+
+namespace pricing_analyzer_back.Infrasctructure.Models
+{
+    public class PricingPolicy
+    {
+        [Key]
+        public int Id { get; set; }
+        public string PolicyName { get; set; } = default!;
+        public string Description { get; set; } = default!;
+        public decimal DefaultMarkupPercent { get; set; } // Базовая наценка
+        public bool IsActive { get; set; } = true;
+    }
+}
+
+using System.ComponentModel.DataAnnotations;
+
+namespace pricing_analyzer_back.Infrasctructure.Models
+{
+    public class Product
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = default!;
+        public string Description { get; set; } = default!;
+        public decimal BaseCost { get; set; } // Себестоимость
+        public decimal MarkupPercent { get; set; } // Наценка в %
+        public decimal FinalPrice => BaseCost * (1 + MarkupPercent / 100);
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+}
+
+using System.ComponentModel.DataAnnotations;
+
+namespace pricing_analyzer_back.Infrasctructure.Models
+{
+    public class ProductCalculation
+    {
+        public int Id { get; set; }
+        public int ProductId { get; set; }
+        public Product Product { get; set; } = default!;
+        public int UserId { get; set; }
+        public User User { get; set; } = default!;
+        public DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
+        public decimal CustomMarkup { get; set; } // Для собственной наценки
+        public decimal CalculatedPrice => Product.BaseCost * (1 + CustomMarkup / 100);
+    }
+}
+
+using System.ComponentModel.DataAnnotations;
+
+namespace pricing_analyzer_back.Infrasctructure.Models
+{
+    public class User
+    {
+        public int Id { get; set; }
+        public string Username { get; set; } = default!;
+        public string PasswordHash { get; set; } = default!;
+        public string Role { get; set; } = "user"; // "admin" / "user"
+    }
+
+}
 ```
 
 ---
@@ -72,11 +147,13 @@ CREATE TABLE staff_actions (
 ## **Функциональные возможности**
 
 ### Диаграмма вариантов использования
-![Диаграмма вариантов использования](docs/UseCase.png)
+![Диаграмма вариантов использования](png/6.png)
 
 ### User-flow диаграмма
 
-![User Flow](docs/User_Flow.png)
+![User Flow](png/7_Экномист.png)
+
+![User Flow](png/8_Менеджер.png)
 
 
 ---
@@ -86,13 +163,13 @@ CREATE TABLE staff_actions (
 ### UML-диаграммы
 
 #### Диаграмма классов
-![Диаграмма классов](docs/UML_Class_Diagram.png)
+![Диаграмма классов](png/9.png)
 
 #### Диаграмма последовательностей
-![Диаграмма последовательностей](docs/UML_Sequence_Diagram.png)
+![Диаграмма последовательностей](png/10.png)
 
 #### Диаграмма компонентов
-![Диаграмма компонентов](docs/UML_Component_Diagram.png)
+![Диаграмма компонентов](png/11.png)
 
 ### Спецификация API
 
