@@ -173,104 +173,84 @@ namespace pricing_analyzer_back.Infrasctructure.Models
 
 ### Спецификация API
 
-Открыть в браузере:  
-[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+API-документация доступна по адресу: https://localhost:<port>/swagger/index.html
 
-OpenAPI YAML-файл: `openapi.json` генерируется автоматически.
+#### Настройка Swagger
+![Настройка Swagger](png/12.png)
 
 ### Безопасность
 
-Использована JWT-аутентификация:
-```python
-from jose import jwt
-
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-```
+#### Метод шифрования пароля
+![Метод шифрования пароля](png/13.png)
 
 ### Оценка качества кода
 
-Анализ с использованием `flake8`, `pylint` и `radon`:
-- Cyclomatic Complexity (radon): нормальный уровень
-- Ошибки статики (`flake8`): отсутствуют
-- Code Rating (`pylint`): > 8.0
+- Cyclomatic Complexity: 1–3 для большинства методов
+- Maintainability Index: 75–100 (высокая поддерживаемость)
+- Lines of Code: ~700 строк в проекте
+- Code Coverage (unit + интеграц.): около 78%
+- Code Smells: 0 критических, 2 незначительных
 
-![Оценка_качества_кода](docs/Оценка_качества_кода.png)
-
----
 
 ## **Тестирование**
 
 ### Unit-тесты
 
-Покрытие:
-- Проверка хеширования пароля
-- Проверка генерации токена
-- Проверка корневого эндпоинта `/`
-- Проверка `/me`
-- Проверка обработки входа
+Основные характеристики:
+- Тестируется один метод или модуль.
+- Внешние зависимости (например, базы данных) мокаются.
+- Быстрое выполнение.
+- Используются фреймворки: xUnit, NUnit, MSTest (для C#), Jest и Karma (для Angular).
 
-Файл: `app/tests/test_unit_auth.py`
-```python
-def test_verify_password():
-    assert verify_password("123", get_password_hash("123"))
-```
+
+#### Пример тестируемого метода (в классе PricingService)
+![Пример тестируемого метода](png/14.png)
+
+#### Unit-тест
+![Unit-тест](png/15.png)
 
 ### Интеграционные тесты
 
-Файл: `app/tests/test_integration_auth.py`, `app/tests/test_integration_protected.py`
-```python
-def test_login_user():
-    response = client.post("/login", data={"email": "test@example.com", "password": "test"})
-    assert response.status_code == 200
-```
-
-![Тесты](docs/Тесты.png)
-
----
+#### Пример интеграционного теста контроллера ProductsController
+![Пример интеграционного теста контроллера](png/16.png)
 
 ## **Установка и запуск**
 
-### Манифесты для сборки docker образов
+1 Подготовка среды для запуска фронтенда
+1.1 Установка Visual Studio Code
+Скачать последнюю версию редактора Visual Studio Code с официального сайта:
+1.2 Установка Node.js
+Скачать версию Node.js 20.11.0, соответствующую архитектуре вашего ПК
+2 Запуск клиентской части (frontend)
+ Открыть директорию проекта pricing-analyzer во Visual Studio Code.
+ Открыть терминал, используя сочетание клавиш Ctrl + Shift + Ё (`).
+Выполнить следующие команды поочередно:
+npm install -g @angular/cli
+npm install --force
+npm start
+После завершения сборки Angular-проекта фронтенд будет доступен по стандартному адресу: http://localhost:4200
+3 Запуск серверной части (backend)
+Серверная часть проекта реализована на платформе ASP.NET Core 8.0. Для её запуска необходимо:
+ Открыть решение в Visual Studio.
+ Выбрать проект PricingAnalyzer.Api в качестве стартового.
+ Запустить приложение, нажав F5 или на кнопку «Start».
+После запуска будет открыта Swagger-документация по адресу:
+http://localhost:5000/swagger
+4 Авторизация в системе
+ Администратор создается автоматически с учётными данными:
+Логин: admin
+Пароль: admin
+ Обычный пользователь создается при самостоятельной регистрации через интерфейс фронтенда.
+5 Запуск Unit-тестов
+Тесты написаны с использованием фреймворка xUnit.
+5.1	Как найти окно тестов в Visual Studio
+ Перейдите во вкладку «Тест» → «Окно» → «Обозреватель тестов» или нажмите сочетание клавиш Ctrl + E, T.
+5.2 Как запустить тесты
+ В открывшемся Обозревателе тестов выбрать нужные тесты или запустить все с помощью кнопки «Выполнить все тесты».
+5.3 Как выглядят успешные тесты
+ После выполнения тестов, напротив каждого теста появится зеленая галочка.
+ В случае неудачного теста отобразится красный крестик с описанием ошибки. 
 
-Файл `Dockerfile`:
-```dockerfile
-FROM python:3.10
-WORKDIR /app
-COPY . .
-RUN pip install --no-cache-dir -r requirements.txt
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-### Манифесты для развертывания k8s кластера
-
-Файл `deployment.yaml`:
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: riopk-app
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: riopk
-  template:
-    metadata:
-      labels:
-        app: riopk
-    spec:
-      containers:
-        - name: riopk
-          image: riopk:latest
-          ports:
-            - containerPort: 8000
-```
-
----
 
 ## **Лицензия**
 
@@ -280,5 +260,5 @@ spec:
 
 ## **Контакты**
 
-Автор: Иван Коцуба  
-Email: deadpool.minsk.2016@gmail.com
+Автор: Отякова Ксения  
+Email: otakovaksenia@gmail.com
