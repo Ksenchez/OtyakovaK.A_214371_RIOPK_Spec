@@ -151,7 +151,7 @@ namespace pricing_analyzer_back.Infrasctructure.Models
 
 ### User-flow диаграмма
 
-![User Flow](png/7_Экномист.png)
+![User Flow](png/7_Экономист.png)
 
 ![User Flow](png/8_Менеджер.png)
 
